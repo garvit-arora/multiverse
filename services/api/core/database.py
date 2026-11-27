@@ -13,6 +13,12 @@ class Base(DeclarativeBase):
 
 def _make_engine(database_url: str | None = None):
     url = database_url or get_settings().database_url
+    # Render Postgres supplies `postgresql://` (and some providers still use
+    # `postgres://`). Use psycopg 3 explicitly; Compose's MySQL URL is unchanged.
+    if url.startswith("postgres://"):
+        url = "postgresql+psycopg://" + url.removeprefix("postgres://")
+    elif url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url.removeprefix("postgresql://")
     connect_args = {}
     if url.startswith("sqlite"):
         connect_args["check_same_thread"] = False
