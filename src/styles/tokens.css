@@ -1,0 +1,26 @@
+:root {
+  --u: min(calc(100vw / 1440), calc(100svh / 760));
+  --white: #fff; --ink: #151515; --ink-button: #161616; --ink-header: #161515;
+  --grey: #717171; --steel: #a9aebb; --glass: rgba(168,168,168,.2);
+  --glass-edge: rgba(255,255,255,.2); --glass-shine: rgba(255,255,255,.25);
+  --sky-tint: rgba(0,0,0,.4); --cursor-fill: rgba(255,255,255,.2); --cursor-edge: rgba(255,255,255,.6);
+  --font-sans: "Geist", "Helvetica Neue", Arial, sans-serif; --fit-display: .93; --fit: .915; --cap: .71;
+  --display-size: calc(96 * var(--fit-display) * var(--u)); --display-leading: calc(91.5 * var(--u));
+  --body-size: calc(20 * var(--fit) * var(--u)); --body-leading: calc(23 * var(--u));
+  --small-size: calc(16 * var(--fit) * var(--u)); --nav-size: calc(14 * var(--fit) * var(--u));
+  --ui-size: calc(16 * var(--fit) * var(--u)); --counter-size: calc(28 * var(--fit) * var(--u));
+  --edge: calc(20 * var(--u)); --bottom: calc(40 * var(--u)); --pill: 100px;
+}
+@media (max-width: 1023px) {
+  :root { --u: min(calc(100vw / 415), calc(100svh / 760)); --display-size: calc(48 * var(--fit-display) * var(--u)); --display-leading: calc(45.75 * var(--u)); --body-size: calc(18 * var(--fit) * var(--u)); --body-leading: calc(20.7 * var(--u)); --ui-size: calc(14 * var(--fit) * var(--u)); }
+}
+@media (max-width: 480px) {
+  :root {
+    --body-size: max(16px, calc(18 * var(--fit) * var(--u)));
+    --body-leading: max(20px, calc(20.7 * var(--u)));
+    --small-size: max(14px, calc(16 * var(--fit) * var(--u)));
+    --nav-size: max(13px, calc(14 * var(--fit) * var(--u)));
+    --ui-size: max(13px, calc(14 * var(--fit) * var(--u)));
+    --edge: max(14px, calc(20 * var(--u)));
+  }
+}

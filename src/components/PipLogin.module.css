@@ -1,0 +1,334 @@
+/* The 1080² stage, centred in the window and scaled by the engine; the scene inside it is zoomed 1.18. Every layer is
+   placed in scene px, as in the original. */
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--stage);
+  height: var(--stage);
+  margin: calc(var(--stage) / -2) 0 0 calc(var(--stage) / -2);
+  overflow: hidden;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--stage-glow);
+  user-select: none;
+}
+.scene {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--stage);
+  height: var(--stage);
+  transform-origin: 540px 560px;
+  transform: var(--scene-zoom);
+}
+
+/* ---------- Pip ---------- */
+.pip {
+  position: absolute;
+  left: 640px;
+  top: 292px;
+  width: 200px;
+  height: 190px;
+  transform-origin: 100px 190px;
+}
+.antenna {
+  position: absolute;
+  left: 96px;
+  top: -32px;
+  width: 8px;
+  height: 38px;
+  transform-origin: 4px 38px;
+}
+.stem {
+  position: absolute;
+  left: 2px;
+  top: 6px;
+  width: 4px;
+  height: 34px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #c9c5bc, #e4e1da 50%, #bdb8ae);
+}
+.ball {
+  position: absolute;
+  left: -7px;
+  top: -10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff 0 18%, #eeebe5 46%, #c8c3b9 100%);
+}
+.glow {
+  position: absolute;
+  left: -7px;
+  top: -10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 32%, #f2fff9 0 16%, #8ff0c2 52%, #3fbf86 100%);
+  opacity: 0;
+}
+.halo {
+  position: absolute;
+  left: -23px;
+  top: -26px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(143, 240, 194, 0.55), rgba(143, 240, 194, 0) 70%);
+  opacity: 0;
+}
+.ear {
+  position: absolute;
+  top: 54px;
+  width: 22px;
+  height: 60px;
+  border-radius: 11px;
+  background: linear-gradient(90deg, #cfcbc2 0%, #ebe8e2 55%, #f6f4f0 100%);
+}
+.earLeft {
+  left: -12px;
+}
+.earRight {
+  right: -12px;
+  transform: scaleX(-1);
+}
+.earSlot {
+  position: absolute;
+  left: 6px;
+  top: 24px;
+  width: 6px;
+  height: 12px;
+  border-radius: 3px;
+  background: #bfbab0;
+}
+.earLight {
+  position: absolute;
+  left: 6px;
+  top: 24px;
+  width: 6px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--pip-green);
+  opacity: 0;
+}
+.head {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 200px;
+  height: 172px;
+  border-radius: 74px;
+  background: radial-gradient(140% 120% at 30% 16%, #ffffff 0%, #f4f2ee 36%, #e2dfd8 78%, #d3cfc6 100%);
+  box-shadow:
+    inset -12px -16px 28px rgba(70, 60, 40, 0.12),
+    inset 10px 12px 20px rgba(255, 255, 255, 0.95),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.04);
+}
+.spec {
+  position: absolute;
+  left: 30px;
+  top: 10px;
+  width: 84px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%);
+  filter: blur(2px);
+}
+.bezel {
+  position: absolute;
+  left: 14px;
+  top: 16px;
+  width: 172px;
+  height: 132px;
+  border-radius: 56px;
+  background: linear-gradient(160deg, #2a2b2e, #111214 60%, #1c1d20);
+}
+.screen {
+  position: absolute;
+  left: 18px;
+  top: 20px;
+  width: 164px;
+  height: 124px;
+  border-radius: 52px;
+  background: radial-gradient(120% 120% at 50% 40%, #121316 0%, var(--led-dark) 70%);
+  overflow: hidden;
+}
+.led,
+.ledGlow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 164px;
+  height: 124px;
+}
+.ledGlow {
+  filter: blur(4px);
+  opacity: 0.75;
+}
+.glass {
+  position: absolute;
+  inset: 0;
+  border-radius: 52px;
+  background:
+    radial-gradient(120% 80% at 30% -10%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 45%),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 30%);
+}
+.arc {
+  position: absolute;
+  left: 22px;
+  top: 8px;
+  width: 96px;
+  height: 30px;
+  border-radius: 50%;
+  border-top: 2px solid rgba(255, 255, 255, 0.18);
+  transform: rotate(-8deg);
+}
+.hand {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 48px;
+  height: 32px;
+  z-index: 6;
+}
+.palm {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: radial-gradient(130% 130% at 30% 18%, #ffffff 0%, #f0eee9 45%, #d8d4cb 100%);
+  box-shadow:
+    inset -3px -5px 9px rgba(70, 60, 40, 0.13),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.9);
+}
+.finger {
+  position: absolute;
+  top: 4px;
+  width: 1.5px;
+  height: 10px;
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* ---------- the card ---------- */
+.card {
+  position: absolute;
+  left: 200px;
+  top: 430px;
+  width: 680px;
+  height: 388px;
+  border-radius: var(--card-radius);
+  background: var(--card);
+  border: 1px solid var(--card-rim);
+  padding: var(--card-pad);
+}
+.cap {
+  font-family: var(--mono);
+  font-size: var(--cap-size);
+  letter-spacing: var(--cap-tracking);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.title {
+  font-size: var(--title-size);
+  font-weight: var(--title-weight);
+  letter-spacing: var(--title-tracking);
+  margin-top: 12px;
+}
+.field {
+  position: absolute;
+  left: var(--card-pad);
+  right: var(--card-pad);
+  height: var(--field-h);
+  border-radius: calc(var(--field-h) / 2);
+  background: var(--field-fill);
+  border: 1px solid var(--field-rim);
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  font-size: var(--field-size);
+  color: var(--placeholder);
+}
+.fieldEmail {
+  top: 144px;
+}
+.fieldPassword {
+  top: 212px;
+}
+.field.focused {
+  border-color: var(--ink);
+  background: #242428;
+}
+.label {
+  width: var(--label-w);
+  font-size: var(--label-size);
+  color: var(--muted);
+}
+.value {
+  color: var(--ink);
+}
+.dots {
+  letter-spacing: var(--dots-tracking);
+  font-size: var(--dots-size);
+  color: var(--ink);
+}
+.caret {
+  display: inline-block;
+  width: var(--caret-w);
+  height: var(--caret-h);
+  background: var(--ink);
+  margin-left: 1px;
+  vertical-align: middle;
+  opacity: 0;
+}
+.error {
+  position: absolute;
+  right: 22px;
+  font-size: 14px;
+  color: var(--error);
+  opacity: 0;
+}
+.button {
+  position: absolute;
+  left: var(--card-pad);
+  right: var(--card-pad);
+  top: 288px;
+  height: var(--field-h);
+  border-radius: calc(var(--field-h) / 2);
+  background: var(--button);
+  color: var(--white);
+  font-size: var(--field-size);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.buttonLabel {
+  position: absolute;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--white);
+}
+
+/* ---------- the cursor ---------- */
+.cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 30px;
+  z-index: 20;
+}
+.cursor svg {
+  overflow: visible;
+  transform-origin: 4px 4px;
+}

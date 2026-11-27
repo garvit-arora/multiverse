@@ -1,0 +1,126 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+.application-registry-grid > * {
+  min-height: 18rem;
+  aspect-ratio: auto !important;
+}
+
+.overview-app-grid > * {
+  min-height: 14rem;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-gray: #1a1a1a;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+@font-face { font-family: Geist; src: url("/fonts/Geist-400.woff2") format("woff2"); font-weight: 400; font-display: block; }
+@font-face { font-family: Geist; src: url("/fonts/Geist-500.woff2") format("woff2"); font-weight: 500; font-display: block; }
+@font-face { font-family: "Geist Mono"; src: url("/fonts/GeistMono-500.woff2") format("woff2"); font-weight: 500; font-display: block; }
+
+.pip-shell {
+  --stage: 1080px; --scene-zoom: translateY(-20px) scale(1.18); --font: Geist, sans-serif; --mono: "Geist Mono", monospace;
+  --ink: #f7f7f7; --muted: #8f8f93; --placeholder: #77777d; --white: #fff; --error: #ff6b70;
+  --card: #111113; --card-rim: rgba(255,255,255,.1); --card-radius: 32px; --card-pad: 44px;
+  --cap-size: 12px; --cap-tracking: 1px; --title-size: 40px; --title-weight: 500; --title-tracking: -1.2px;
+  --field-h: 56px; --field-fill: #1a1a1d; --field-rim: rgba(255,255,255,.09); --field-size: 17px; --label-w: 96px; --label-size: 14px;
+  --dots-size: 20px; --dots-tracking: 4px; --caret-w: 2px; --caret-h: 22px; --button: #151515; --pip-green: #8ff0c2; --led-dark: #09090b;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; margin: 0; }
+body { @apply bg-black font-sans text-white antialiased; }
+button, input { font: inherit; }
+button,
+a,
+[role="button"] {
+  cursor: pointer;
+}
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.dashboard-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.dashboard-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.verse-ai > aside {
+  inset: 0 !important;
+  width: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: clamp(24px, 5vw, 72px) !important;
+  background: rgba(8, 9, 9, .98) !important;
+}
+.verse-ai > aside .dashboard-scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  align-content: start;
+  gap: 12px;
+  max-height: calc(100% - 70px);
+}
+.verse-ai > form,
+.verse-ai > .dashboard-scroll {
+  width: min(840px, calc(100% - 32px)) !important;
+}
+.verse-ai > .dashboard-scroll {
+  bottom: 190px !important;
+  scroll-padding-bottom: 24px;
+}
+.verse-ai-empty > .text-center {
+  position: relative !important;
+  bottom: auto !important;
+}
+.verse-ai a { color: white !important; }
+.verse-ai blockquote { border-color: rgba(255,255,255,.3) !important; }
+
+@media (max-width: 640px) {
+  html, body, #root { width: 100%; overflow-x: hidden; }
+  body { min-width: 320px; }
+  button, a, input, textarea { -webkit-tap-highlight-color: transparent; }
+  button, [role="button"] { touch-action: manipulation; }
+  input, textarea, select { font-size: 16px; }
+
+  .verse-ai { padding-inline: 12px !important; }
+  .verse-ai > form,
+  .verse-ai > .dashboard-scroll { width: calc(100% - 24px) !important; }
+  .verse-ai > .dashboard-scroll { top: 64px !important; bottom: 184px !important; padding-top: 12px !important; }
+  .verse-ai > form { bottom: max(10px, env(safe-area-inset-bottom)) !important; border-radius: 20px !important; padding: 10px !important; }
+  .verse-ai-empty > form { bottom: auto !important; }
+  .verse-ai-empty > .text-center { padding-inline: 8px !important; }
+  .verse-ai-empty > .text-center h2 { font-size: clamp(28px, 9vw, 36px); }
+  .verse-ai > button:first-of-type { left: 60px !important; top: 14px !important; }
+  .verse-ai > button:nth-of-type(2) { right: 12px !important; top: 14px !important; }
+  .verse-ai textarea { min-height: 48px !important; font-size: 16px !important; }
+  .verse-ai > aside { padding: 20px 16px !important; }
+
+  main > aside { width: min(280px, 88vw) !important; }
+  main > aside button { min-height: 44px; }
+  main > header button { min-width: 48px; }
+  [role="dialog"], form { max-width: 100%; }
+  .application-registry-grid { gap: 12px; }
+}
+
+.pip-shell { --stage-glow: radial-gradient(ellipse at 50% 40%, #19191c 0%, #0d0d0f 70%, #050506 100%); }

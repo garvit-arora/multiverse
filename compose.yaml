@@ -1,0 +1,129 @@
+name: multiverse
+
+x-api-env: &api-env
+  APP_ENV: development
+  APP_BASE_URL: http://localhost:5173
+  DATABASE_URL: mysql+pymysql://multiverse:${MYSQL_PASSWORD:-multiverse_dev}@mysql:3306/multiverse
+  REDIS_URL: redis://redis:6379/0
+  FLAGSMITH_API_URL: http://flagsmith:8000/api/v1/
+  FLAGSMITH_MANAGEMENT_API_TOKEN: ${FLAGSMITH_MANAGEMENT_API_TOKEN:-}
+  AUTH_SECRET: ${AUTH_SECRET:-change-this-development-auth-secret}
+  SESSION_SECRET: ${SESSION_SECRET:-change-this-development-session-secret}
+  CREDENTIAL_ENCRYPTION_KEY: ${CREDENTIAL_ENCRYPTION_KEY:-}
+  PASSPORT_PRIVATE_KEY_PATH: /app/infra/keys/passport_ed25519.pem
+  PASSPORT_PUBLIC_KEY_PATH: /app/infra/keys/passport_ed25519.pub.pem
+  ARTIFACT_STORAGE_PATH: /data/artifacts
+  ALLOWED_EXPLORATION_ORIGINS: http://web:5173,http://localhost:5173,http://127.0.0.1:5173
+  ALLOWED_CORS_ORIGINS: ${ALLOWED_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+  ALLOWED_CORS_ORIGIN_REGEX: ${ALLOWED_CORS_ORIGIN_REGEX:-^https?://(localhost|127\.0\.0\.1|10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})(?::\d+)?$}
+  TINKER_API_KEY: ${TINKER_API_KEY:-}
+  TINKER_BASE_URL: ${TINKER_BASE_URL:-https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1}
+  TINKER_MODEL: ${TINKER_MODEL:-thinkingmachines/Inkling:peft:262144}
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports: ["5173:5173"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5173"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    environment: *api-env
+    ports: ["8001:8001"]
+    volumes:
+      - artifacts:/data/artifacts
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      flagsmith: { condition: service_started }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/worker/Dockerfile
+    environment: *api-env
+    volumes:
+      - artifacts:/data/artifacts
+    depends_on:
+      api: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: multiverse
+      MYSQL_USER: multiverse
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-multiverse_dev}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-multiverse_root_dev}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-multiverse_root_dev}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  flagsmith-postgres:
+    image: postgres:15.5-alpine
+    environment:
+      POSTGRES_USER: ${FLAGSMITH_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${FLAGSMITH_DB_PASSWORD:-flagsmith_dev}
+      POSTGRES_DB: ${FLAGSMITH_DB_NAME:-flagsmith}
+    volumes:
+      - flagsmith-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${FLAGSMITH_DB_NAME:-flagsmith} -U ${FLAGSMITH_DB_USER:-postgres}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  flagsmith-migrate:
+    image: docker.flagsmith.com/flagsmith/flagsmith:2.294.0
+    command: migrate
+    environment: &flagsmith-env
+      DATABASE_URL: postgresql://${FLAGSMITH_DB_USER:-postgres}:${FLAGSMITH_DB_PASSWORD:-flagsmith_dev}@flagsmith-postgres:5432/${FLAGSMITH_DB_NAME:-flagsmith}
+      ENVIRONMENT: production
+      DJANGO_ALLOWED_HOSTS: "*"
+      FLAGSMITH_DOMAIN: localhost:8000
+      DJANGO_SECRET_KEY: ${FLAGSMITH_SECRET_KEY:-change-this-development-flagsmith-secret}
+      USE_POSTGRES_FOR_ANALYTICS: "true"
+    depends_on:
+      flagsmith-postgres: { condition: service_healthy }
+
+  flagsmith:
+    image: docker.flagsmith.com/flagsmith/flagsmith:2.294.0
+    command: serve
+    environment: *flagsmith-env
+    ports: ["8000:8000"]
+    depends_on:
+      flagsmith-migrate: { condition: service_completed_successfully }
+
+volumes:
+  artifacts:
+  mysql-data:
+  redis-data:
+  flagsmith-pgdata:

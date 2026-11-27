@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://multiverse.dev/schemas/sfip/1.0/passport.schema.json",
+  "title": "SFIP Passport Payload v1.0",
+  "type": "object",
+  "required": ["schema_version", "passport_id", "version", "issuer", "issued_at", "expires_at", "preferences"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "passport_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "version": { "type": "integer", "minimum": 1 },
+    "issuer": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "subject": { "type": "string", "maxLength": 128 },
+    "audience": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "privacy.analytics": { "type": "boolean" },
+        "accessibility.motion": { "type": "string", "enum": ["reduced", "full"] },
+        "network.bandwidth": { "type": "string", "enum": ["low", "standard", "high"] },
+        "interface.density": { "type": "string", "enum": ["compact", "comfortable"] },
+        "experimentation.opt_in": { "type": "boolean" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["application_id", "application_name", "build_id"],
+      "properties": {
+        "application_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "application_name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "build_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "workflow_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "workflow_name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "workflow_version": { "type": "string", "minLength": 1, "maxLength": 64 }
+      }
+    }
+  }
+}

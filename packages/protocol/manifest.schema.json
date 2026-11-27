@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://multiverse.dev/schemas/sfip/1.0/manifest.schema.json",
+  "title": "SFIP Application Capability Manifest v1.0",
+  "type": "object",
+  "required": ["schema_version", "application", "capabilities"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "application": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "revision": { "type": "string", "maxLength": 64 },
+    "aliases": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "mandatory_restrictions": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "entitlement_flags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["flag_key", "type", "mapping", "user_configurable", "portable"],
+        "properties": {
+          "flag_key": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "enum": ["boolean", "string", "number"] },
+          "mapping": { "type": "object" },
+          "trait_key": { "type": "string" },
+          "evaluation_mechanism": { "type": "string", "enum": ["identity_override", "trait_segment", "snapshot"] },
+          "allowed_values": { "type": "array" },
+          "user_configurable": { "type": "boolean" },
+          "portable": { "type": "boolean" },
+          "requires_entitlement": { "type": "string" },
+          "priority": { "type": "integer", "minimum": 0, "maximum": 100 }
+        }
+      }
+    }
+  }
+}
