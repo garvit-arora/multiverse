@@ -3,6 +3,7 @@ dist
 .venv
 .git
 .env
+infra/keys/*service-account*.json
 data
 __pycache__
 .pytest_cache

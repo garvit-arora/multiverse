@@ -6,6 +6,7 @@ sqlalchemy==2.0.36
 alembic==1.14.0
 pymysql==1.1.1
 psycopg[binary]==3.3.9
+firebase-admin==7.8.0
 cryptography==44.0.0
 redis==5.2.1
 rq==2.1.0

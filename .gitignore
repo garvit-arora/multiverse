@@ -30,6 +30,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 infra/keys/*.pem
+infra/keys/*service-account*.json
 data/
 *.db
 *.sqlite3

@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     auth_secret: str = "dev-auth-secret-change-in-production"
     credential_encryption_key: str = ""
 
+    firebase_project_id: str = ""
+    firebase_service_account_path: str = ""
+
     database_url: str = f"sqlite:///{(ROOT_DIR / 'data' / 'multiverse.db').as_posix()}"
     redis_url: str = "redis://localhost:6379/0"
 

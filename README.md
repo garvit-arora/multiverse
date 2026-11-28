@@ -133,6 +133,10 @@ For Flagsmith:
 
 See [CREDENTIALS.md](CREDENTIALS.md) for every variable and where to obtain it. Never commit `.env`, private keys, Management API tokens, or environment keys.
 
+### Firebase Authentication
+
+The web app supports Google and email/password sign-in through Firebase Authentication. Enable both providers in Firebase Console, add the deployed frontend hostname under Authentication's authorized domains, and configure `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, and `VITE_FIREBASE_APP_ID` on the frontend build service. Configure `FIREBASE_PROJECT_ID` and `FIREBASE_SERVICE_ACCOUNT_PATH` on the API; keep the Firebase Admin service-account JSON in Render Secret Files and point the path variable at that mounted file. Email/password users must verify their email before Multiverse creates a session. Existing Multiverse accounts are matched only to verified Firebase accounts with the same email.
+
 ## Product workflow
 
 1. Create an account and workspace.

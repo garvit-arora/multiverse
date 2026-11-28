@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { createUserWithEmailAndPassword, GoogleAuthProvider, sendEmailVerification, signInWithEmailAndPassword, signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
 import { AnimatePresence, motion } from "motion/react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -13,6 +14,7 @@ import { SmoothLanding } from "./components/SmoothLanding";
 import { CallChip, type CallChipStatus } from "./components/CallChip";
 import { ThoughtLine } from "./components/ThoughtLine";
 import { api, ApiError, streamAssistant, type AppDetail, type AppRecord, type Branch, type ChatTurn, type Exploration, type PassportRecord, type ProjectContext, type Session, type SystemStatus } from "./lib/api";
+import { firebaseAuth } from "./lib/firebase";
 
 export default function App() {
   const navigate = useNavigate();
@@ -30,17 +32,44 @@ export default function App() {
     event.preventDefault(); setAuthBusy(true); setAuthError("");
     const form = new FormData(event.currentTarget);
     try {
-      if (mode === "signin") await api.login({ email: String(form.get("email") || ""), password: String(form.get("password") || "") });
-      else await api.signup({ email: String(form.get("email") || ""), password: String(form.get("password") || ""), workspace_name: `${String(form.get("first_name") || "Multiverse")} Workspace` });
+      const email = String(form.get("email") || "");
+      const password = String(form.get("password") || "");
+      const workspaceName = `${String(form.get("first_name") || "Multiverse")} Workspace`;
+      if (firebaseAuth) {
+        const credential = mode === "signin"
+          ? await signInWithEmailAndPassword(firebaseAuth, email, password)
+          : await createUserWithEmailAndPassword(firebaseAuth, email, password);
+        if (!credential.user.emailVerified) {
+          await sendEmailVerification(credential.user);
+          setAuthError("Verify your email using the link we sent, then sign in again.");
+          return;
+        }
+        await api.firebaseSession({ id_token: await credential.user.getIdToken(), workspace_name: workspaceName });
+      } else if (mode === "signin") {
+        await api.login({ email, password });
+      } else {
+        await api.signup({ email, password, workspace_name: workspaceName });
+      }
       setSession(await api.me()); navigate("/dashboard/overview", { replace: true });
-    } catch (error) { setAuthError(error instanceof ApiError ? error.message : "The Multiverse API is unavailable."); }
+    } catch (error) { setAuthError(error instanceof ApiError ? error.message : error instanceof Error ? error.message : "Authentication failed."); }
+    finally { setAuthBusy(false); }
+  };
+
+  const signInWithGoogle = async () => {
+    if (!firebaseAuth) { setAuthError("Firebase sign-in is not configured for this site yet."); return; }
+    setAuthBusy(true); setAuthError("");
+    try {
+      const credential = await signInWithPopup(firebaseAuth, new GoogleAuthProvider());
+      await api.firebaseSession({ id_token: await credential.user.getIdToken(), workspace_name: "Multiverse Workspace" });
+      setSession(await api.me()); navigate("/dashboard/overview", { replace: true });
+    } catch (error) { setAuthError(error instanceof ApiError ? error.message : error instanceof Error ? error.message : "Google sign-in failed."); }
     finally { setAuthBusy(false); }
   };
 
   useEffect(()=>{if(!dashboardPage||session)return;let current=true;api.me().then(value=>{if(current)setSession(value)}).catch(()=>{if(current)navigate("/signin",{replace:true})});return()=>{current=false}},[dashboardPage,navigate,session]);
 
   if (location.pathname.startsWith("/dashboard") && !dashboardPage) return <Navigate to="/dashboard/overview" replace/>;
-  if (dashboardPage) return <Dashboard activePage={dashboardPage} onSelect={(page)=>navigate(dashboardPath(page))} session={session} onSignOut={async () => { await api.logout().catch(()=>undefined); setSession(null); navigate("/signin", { replace: true }); }} />;
+  if (dashboardPage) return <Dashboard activePage={dashboardPage} onSelect={(page)=>navigate(dashboardPath(page))} session={session} onSignOut={async () => { await api.logout().catch(()=>undefined); if(firebaseAuth)await firebaseSignOut(firebaseAuth).catch(()=>undefined); setSession(null); navigate("/signin", { replace: true }); }} />;
 
   if (location.pathname === "/") return <SmoothLanding><Page onGetStarted={() => navigate("/signup")} /><ResultsSection/><FeatureAccordion/><LandingSections/><Cursor /></SmoothLanding>;
 
@@ -63,9 +92,8 @@ export default function App() {
               <h1 className="text-3xl font-medium tracking-tight">Welcome Back</h1>
               <p className="text-sm text-white/40">Enter your details to access your workspace.</p>
             </header>
-            <div className="grid grid-cols-2 gap-4">
-              <SocialButton icon={<Globe2 size={18}/>} label="Google" />
-              <SocialButton icon={<GitBranch size={18}/>} label="Github" />
+            <div className="grid grid-cols-1 gap-4">
+              <SocialButton icon={<span className="font-semibold">G</span>} label="Continue with Google" onClick={()=>void signInWithGoogle()} disabled={authBusy}/>
             </div>
             <div className="relative flex items-center"><div className="w-full border-t border-white/10"/><span className="absolute left-1/2 -translate-x-1/2 bg-black px-4 text-xs font-medium uppercase tracking-widest text-white/40">Or</span></div>
             <form className="space-y-5" onSubmit={(event) => void submitAuth(event,"signin")}>
@@ -88,9 +116,8 @@ export default function App() {
             <h1 className="text-3xl font-medium tracking-tight">Create New Profile</h1>
             <p className="text-sm text-white/40">Input your basic details to begin the journey.</p>
           </header>
-          <div className="grid grid-cols-2 gap-4">
-            <SocialButton icon={<Globe2 size={18}/>} label="Google" />
-            <SocialButton icon={<GitBranch size={18}/>} label="Github" />
+          <div className="grid grid-cols-1 gap-4">
+            <SocialButton icon={<span className="font-semibold">G</span>} label="Continue with Google" onClick={()=>void signInWithGoogle()} disabled={authBusy}/>
           </div>
           <div className="relative flex items-center"><div className="w-full border-t border-white/10"/><span className="absolute left-1/2 -translate-x-1/2 bg-black px-4 text-xs font-medium uppercase tracking-widest text-white/40">Or</span></div>
           <form className="space-y-5" onSubmit={(event) => void submitAuth(event,"signup")}>
@@ -459,8 +486,8 @@ function CustomSelect({value,onChange,options,placeholder="Select an option",ari
   return <div ref={root} className="relative"><button type="button" aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} onClick={()=>setOpen(current=>!current)} onKeyDown={event=>{if(event.key==="Escape")setOpen(false)}} className={`flex h-12 w-full items-center justify-between gap-3 rounded-xl border bg-black/30 px-4 text-left text-sm transition ${open?openStyle:"border-white/10 hover:border-white/20"}`}><span className={selected?"truncate text-white":"truncate text-white/35"}>{selected?.label??placeholder}</span><ChevronDown size={16} className={`shrink-0 text-white/45 transition-transform ${open?"rotate-180":""}`}/></button>{open&&<div role="listbox" aria-label={ariaLabel} className={`absolute z-[80] max-h-64 w-full overflow-y-auto rounded-xl border border-white/10 bg-[#18191a] p-1.5 shadow-2xl shadow-black/60 ${dropUp?"bottom-full mb-2":"mt-2"}`}><button type="button" role="option" aria-selected={!value} onClick={()=>{onChange("");setOpen(false)}} className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm text-white/35 transition hover:bg-white/5">{placeholder}</button>{options.map(option=><button type="button" role="option" aria-selected={value===option.value} key={option.value} onClick={()=>{onChange(option.value);setOpen(false)}} className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition hover:bg-white/5 ${value===option.value?(monochrome?"bg-white/10 text-white":"bg-violet-400/10 text-violet-200"):"text-white/80"}`}><span className="min-w-0"><span className="block truncate">{option.label}</span>{option.description&&<small className="mt-0.5 block truncate text-[10px] text-white/35">{option.description}</small>}</span>{value===option.value&&<Check size={14} className={`shrink-0 ${monochrome?"text-white":"text-violet-300"}`}/>}</button>)}</div>}</div>;
 }
 
-function SocialButton({ icon, label }: { icon: ReactNode; label: string }) {
-  return <button type="button" className="flex h-12 items-center justify-center gap-3 rounded-xl border border-white/10 bg-black text-sm font-medium transition hover:bg-white/5">{icon}{label}</button>;
+function SocialButton({ icon, label, onClick, disabled=false }: { icon: ReactNode; label: string; onClick?:()=>void; disabled?:boolean }) {
+  return <button type="button" onClick={onClick} disabled={disabled} className="flex h-12 items-center justify-center gap-3 rounded-xl border border-white/10 bg-black text-sm font-medium transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50">{icon}{label}</button>;
 }
 
 function InputGroup({ name, label, placeholder, type }: { name: string; label: string; placeholder: string; type: string }) {

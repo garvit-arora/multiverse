@@ -1,5 +1,18 @@
 const inferredApiUrl = typeof window === "undefined" ? "http://localhost:8001" : `${window.location.protocol}//${window.location.hostname}:8001`;
 const API_URL = (import.meta.env.VITE_API_URL || inferredApiUrl).replace(/\/$/, "");
+const SESSION_TOKEN_KEY = "multiverse_session_token";
+
+function readSessionToken(): string {
+  try { return window.sessionStorage.getItem(SESSION_TOKEN_KEY) || ""; } catch { return ""; }
+}
+
+function saveSessionToken(token: string): void {
+  try { window.sessionStorage.setItem(SESSION_TOKEN_KEY, token); } catch { /* Cookie auth remains available as a fallback. */ }
+}
+
+function clearSessionToken(): void {
+  try { window.sessionStorage.removeItem(SESSION_TOKEN_KEY); } catch { /* Ignore unavailable storage. */ }
+}
 
 export class ApiError extends Error {
   status: number;
@@ -7,16 +20,19 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = readSessionToken();
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...init?.headers },
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init?.headers },
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const detail = typeof data.detail === "string" ? data.detail : data.detail?.[0]?.msg;
     throw new ApiError(response.status, detail || `Request failed (${response.status})`);
   }
+  if (data && typeof data.access_token === "string") saveSessionToken(data.access_token);
+  if (path === "/api/v1/auth/logout") clearSessionToken();
   return data as T;
 }
 
@@ -34,7 +50,8 @@ export type ChatTurn = { role: "user" | "assistant"; content: string };
 export type AssistantStreamEvent = { type: "step" | "delta" | "done" | "error"; text?: string; message?: string };
 
 export async function streamAssistant(body: { application_id: string; message: string; history: ChatTurn[]; model: "thinkingmachines/Inkling:peft:262144" }, onEvent: (event: AssistantStreamEvent) => void, signal?: AbortSignal) {
-  const response = await fetch(`${API_URL}/api/v1/assistant/chat/stream`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json", Accept: "text/event-stream" }, body: JSON.stringify(body), signal });
+  const token = readSessionToken();
+  const response = await fetch(`${API_URL}/api/v1/assistant/chat/stream`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json", Accept: "text/event-stream", ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body), signal });
   if (!response.ok) { const data = await response.json().catch(() => ({})); throw new ApiError(response.status, typeof data.detail === "string" ? data.detail : "Unable to start Inkling stream"); }
   if (!response.body) throw new ApiError(502, "Streaming response body is unavailable");
   const reader=response.body.getReader();const decoder=new TextDecoder();let buffer="";
@@ -44,6 +61,7 @@ export async function streamAssistant(body: { application_id: string; message: s
 export const api = {
   signup: (body: { email: string; password: string; workspace_name: string }) => request<{ access_token: string }>("/api/v1/auth/signup", { method: "POST", body: JSON.stringify(body) }),
   login: (body: { email: string; password: string }) => request<{ access_token: string }>("/api/v1/auth/login", { method: "POST", body: JSON.stringify(body) }),
+  firebaseSession: (body: { id_token: string; workspace_name?: string }) => request<{ access_token: string }>("/api/v1/auth/firebase", { method: "POST", body: JSON.stringify(body) }),
   logout: () => request<{ ok: boolean }>("/api/v1/auth/logout", { method: "POST" }),
   me: () => request<Session>("/api/v1/auth/me"),
   apps: () => request<{ items: AppRecord[] }>("/api/v1/apps"),
